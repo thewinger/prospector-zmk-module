@@ -28,7 +28,7 @@ lv_obj_t *zmk_display_status_screen() {
 #ifdef CONFIG_DT_HAS_ZMK_BEHAVIOR_CAPS_WORD_ENABLED
   zmk_widget_caps_word_indicator_init(&caps_word_indicator_widget, screen);
   lv_obj_align(zmk_widget_caps_word_indicator_obj(&caps_word_indicator_widget),
-               LV_ALIGN_RIGHT_BOTTOM, 0, 0);
+               LV_ALIGN_BOTTOM_RIGHT, 0, 0);
 #endif
 
   zmk_widget_battery_bar_init(&battery_bar_widget, screen);
