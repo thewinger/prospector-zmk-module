@@ -144,7 +144,7 @@ int zmk_widget_battery_bar_init(struct zmk_widget_battery_bar *widget,
 
     lv_obj_t *bar = lv_bar_create(info_container);
     lv_obj_set_size(bar, lv_pct(100), 4);
-    lv_obj_align(bar, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_align(bar, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_style_bg_color(bar, lv_color_hex(0x202020), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(bar, 255, LV_PART_MAIN);
     lv_obj_set_style_radius(bar, 1, LV_PART_MAIN);
@@ -172,7 +172,7 @@ int zmk_widget_battery_bar_init(struct zmk_widget_battery_bar *widget,
 
     lv_obj_t *nc_bar = lv_obj_create(info_container);
     lv_obj_set_size(nc_bar, lv_pct(100), 4);
-    lv_obj_align(nc_bar, LV_ALIGN_TOP_MID, 0, 0);
+    lv_obj_align(nc_bar, LV_ALIGN_BOTTOM_MID, 0, 0);
     lv_obj_set_style_bg_color(nc_bar, lv_color_hex(0x9e2121), LV_PART_MAIN);
     lv_obj_set_style_radius(nc_bar, 1, LV_PART_MAIN);
     lv_obj_set_style_bg_opa(nc_bar, 255, 0);
