@@ -13,6 +13,7 @@ endchoice
 config ZMK_DISPLAY_STATUS_SCREEN_CUSTOM
     select LV_USE_LABEL
     select LV_USE_IMG
+    select LV_USE_LINE
     select LV_USE_BAR
     select LV_USE_FLEX
     select LV_USE_ROLLER
