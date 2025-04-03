@@ -4,6 +4,7 @@
 
 // LV_FONT_DECLARE(SF_Compact_Text_Light_24);
 LV_FONT_DECLARE(SF_Compact_Text_Medium_24);
+LV_FONT_DECLARE(SF_Compact_Text_Semibold_28);
 LV_FONT_DECLARE(SF_Compact_Text_Bold_32);
 // LV_FONT_DECLARE(InterDisplay_Light_40);
 // LV_FONT_DECLARE(InterDisplay_Thin_56);
