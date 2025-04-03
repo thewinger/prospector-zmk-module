@@ -8,8 +8,8 @@
 #include <zmk/display.h>
 #include <zmk/event_manager.h>
 #include <zmk/events/modifiers_state_changed.h>
-#include <zmk/keys.h>  // Required for modifier definitions (MOD_LSFT, etc.)
-#include <zmk/types.h> // Required for zmk_mod_flags_t
+#include <zmk/keys.h> // Required for modifier definitions (MOD_LSFT, etc.)
+// #include <zmk/types.h> // Required for zmk_mod_flags_t
 
 #include <fonts.h>      // Assuming you have custom fonts defined here
 #include <sf_symbols.h> // Assuming you have SF Symbols defined here
