@@ -1,151 +1,201 @@
-/*
- * Copyright (c) 2024 The ZMK Contributors
- *
- * SPDX-License-Identifier: MIT
+/**
+ * @file modifiers.c
+ * @brief Widget to display keyboard modifier states (Shift, Ctrl, Opt, Cmd).
  */
 
-#include <zephyr/bluetooth/services/bas.h>
-#include <zephyr/kernel.h>
+#include "modifiers.h" // Include the corresponding header
+
+#include <zmk/display.h>
+#include <zmk/event_manager.h>
+#include <zmk/events/modifiers_state_changed.h>
+#include <zmk/keys.h>  // Required for modifier definitions (MOD_LSFT, etc.)
+#include <zmk/types.h> // Required for zmk_mod_flags_t
+
+#include <fonts.h>      // Assuming you have custom fonts defined here
+#include <sf_symbols.h> // Assuming you have SF Symbols defined here
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
 
-#include <dt-bindings/zmk/modifiers.h>
-#include <zmk/display.h>
-#include <zmk/event_manager.h>
-#include <zmk/events/keycode_state_changed.h>
-#include <zmk/hid.h>
+// Define active and inactive colors (adjust as needed)
+#define MODIFIER_ACTIVE_COLOR lv_color_hex(0xFFFFFF)   // White
+#define MODIFIER_INACTIVE_COLOR lv_color_hex(0x404040) // Dark Gray
 
-#include "modifiers.h"
-
-struct modifiers_state {
-  uint8_t modifiers;
-};
-
-struct modifier_symbol {
-  uint8_t modifier;
-  const lv_img_dsc_t *symbol_dsc;
-  lv_obj_t *symbol;
-  lv_obj_t *selection_line;
-  bool is_active;
-};
-
-LV_IMG_DECLARE(control_icon);
-struct modifier_symbol ms_control = {
-    .modifier = MOD_LCTL | MOD_RCTL,
-    .symbol_dsc = &control_icon,
-};
-
-LV_IMG_DECLARE(shift_icon);
-struct modifier_symbol ms_shift = {
-    .modifier = MOD_LSFT | MOD_RSFT,
-    .symbol_dsc = &shift_icon,
-};
-
-LV_IMG_DECLARE(opt_icon);
-struct modifier_symbol ms_opt = {
-    .modifier = MOD_LALT | MOD_RALT,
-    .symbol_dsc = &opt_icon,
-};
-
-LV_IMG_DECLARE(cmd_icon);
-struct modifier_symbol ms_cmd = {
-    .modifier = MOD_LGUI | MOD_RGUI,
-    .symbol_dsc = &cmd_icon,
-};
-
-struct modifier_symbol *modifier_symbols[] = {
-    // this order determines the order of the symbols
-    &ms_control, &ms_opt, &ms_cmd, &ms_shift};
-
-#define NUM_SYMBOLS                                                            \
-  (sizeof(modifier_symbols) / sizeof(struct modifier_symbol *))
-
+/* Static list to keep track of all modifier indicator widgets */
 static sys_slist_t widgets = SYS_SLIST_STATIC_INIT(&widgets);
 
-static void anim_y_cb(void *var, int32_t v) { lv_obj_set_y(var, v); }
+/**
+ * @brief Structure to hold the state of the modifiers.
+ */
+struct modifiers_state {
+  zmk_mod_flags_t current_mods; // Bitmask of currently active modifiers
+};
 
-static void move_object_y(void *obj, int32_t from, int32_t to) {
-  lv_anim_t a;
-  lv_anim_init(&a);
-  lv_anim_set_var(&a, obj);
-  lv_anim_set_time(&a, 200); // will be replaced with lv_anim_set_duration
-  lv_anim_set_exec_cb(&a, anim_y_cb);
-  lv_anim_set_path_cb(&a, lv_anim_path_overshoot);
-  lv_anim_set_values(&a, from, to);
-  lv_anim_start(&a);
-}
+/**
+ * @brief Updates the visual appearance of the modifier indicators based on
+ * state.
+ *
+ * @param widget The modifier widget instance containing the labels.
+ * @param state The current modifier state.
+ */
+static void modifiers_update_visuals(struct zmk_widget_modifiers *widget,
+                                     struct modifiers_state state) {
+  zmk_mod_flags_t mods = state.current_mods;
 
-static void set_modifiers(lv_obj_t *widget, struct modifiers_state state) {
-  for (int i = 0; i < NUM_SYMBOLS; i++) {
-    bool mod_is_active = state.modifiers & modifier_symbols[i]->modifier;
+  // Update Shift indicator
+  if (mods & (MOD_LSFT | MOD_RSFT)) {
+    lv_obj_set_style_text_color(widget->shift_label, MODIFIER_ACTIVE_COLOR,
+                                LV_PART_MAIN);
+  } else {
+    lv_obj_set_style_text_color(widget->shift_label, MODIFIER_INACTIVE_COLOR,
+                                LV_PART_MAIN);
+  }
 
-    if (mod_is_active && !modifier_symbols[i]->is_active) {
-      move_object_y(modifier_symbols[i]->symbol, 1, 0);
-      move_object_y(modifier_symbols[i]->selection_line, SIZE_SYMBOLS + 4,
-                    SIZE_SYMBOLS + 2);
-      modifier_symbols[i]->is_active = true;
-    } else if (!mod_is_active && modifier_symbols[i]->is_active) {
-      move_object_y(modifier_symbols[i]->symbol, 0, 1);
-      move_object_y(modifier_symbols[i]->selection_line, SIZE_SYMBOLS + 2,
-                    SIZE_SYMBOLS + 4);
-      modifier_symbols[i]->is_active = false;
-    }
+  // Update Control indicator
+  if (mods & (MOD_LCTL | MOD_RCTL)) {
+    lv_obj_set_style_text_color(widget->ctrl_label, MODIFIER_ACTIVE_COLOR,
+                                LV_PART_MAIN);
+  } else {
+    lv_obj_set_style_text_color(widget->ctrl_label, MODIFIER_INACTIVE_COLOR,
+                                LV_PART_MAIN);
+  }
+
+  // Update Option (Alt) indicator
+  if (mods & (MOD_LALT | MOD_RALT)) {
+    lv_obj_set_style_text_color(widget->opt_label, MODIFIER_ACTIVE_COLOR,
+                                LV_PART_MAIN);
+  } else {
+    lv_obj_set_style_text_color(widget->opt_label, MODIFIER_INACTIVE_COLOR,
+                                LV_PART_MAIN);
+  }
+
+  // Update Command (Gui/Super) indicator
+  if (mods & (MOD_LGUI | MOD_RGUI)) {
+    lv_obj_set_style_text_color(widget->cmd_label, MODIFIER_ACTIVE_COLOR,
+                                LV_PART_MAIN);
+  } else {
+    lv_obj_set_style_text_color(widget->cmd_label, MODIFIER_INACTIVE_COLOR,
+                                LV_PART_MAIN);
   }
 }
 
-void modifiers_update_cb(struct modifiers_state state) {
+/**
+ * @brief Callback function that updates all modifier indicator widgets.
+ *
+ * @param state The new modifier state to apply to all indicators.
+ */
+static void modifiers_update_cb(struct modifiers_state state) {
   struct zmk_widget_modifiers *widget;
+  /* Iterate through all registered widgets and update their state */
   SYS_SLIST_FOR_EACH_CONTAINER(&widgets, widget, node) {
-    set_modifiers(widget->obj, state);
+    modifiers_update_visuals(widget, state);
   }
 }
 
+/**
+ * @brief Extracts the modifier state from a ZMK event.
+ *
+ * @param eh The event to process.
+ * @return The current state of the modifiers.
+ */
 static struct modifiers_state modifiers_get_state(const zmk_event_t *eh) {
-  return (struct modifiers_state){.modifiers = zmk_hid_get_explicit_mods()};
+  const struct zmk_modifiers_state_changed *ev =
+      as_zmk_modifiers_state_changed(eh);
+  // Check if the event is valid before dereferencing
+  if (ev == NULL) {
+    LOG_WRN("DISP | Modifiers event is NULL");
+    // Return a default state (no modifiers active) or handle error
+    // appropriately
+    return (struct modifiers_state){.current_mods = 0};
+  }
+  LOG_DBG("DISP | Modifiers State Changed: 0x%02X", ev->modifiers);
+  return (struct modifiers_state){.current_mods = ev->modifiers};
 }
 
+/* Register the widget to listen for modifier state change events */
 ZMK_DISPLAY_WIDGET_LISTENER(widget_modifiers, struct modifiers_state,
                             modifiers_update_cb, modifiers_get_state)
+ZMK_SUBSCRIPTION(widget_modifiers, zmk_modifiers_state_changed);
 
-ZMK_SUBSCRIPTION(widget_modifiers, zmk_keycode_state_changed);
-
+/**
+ * @brief Initializes a new modifier indicator widget.
+ *
+ * @param widget Pointer to the widget structure to initialize.
+ * @param parent The LVGL parent object to attach this widget to.
+ * @return 0 on success, negative error code otherwise.
+ */
 int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
                               lv_obj_t *parent) {
+  /* Create a container object for the row layout */
   widget->obj = lv_obj_create(parent);
+  lv_obj_remove_style_all(widget->obj); // Remove default container styling
+  lv_obj_set_size(widget->obj, LV_SIZE_CONTENT,
+                  LV_SIZE_CONTENT); // Size to content
 
-  lv_obj_set_size(widget->obj, NUM_SYMBOLS * (SIZE_SYMBOLS + 1) + 1,
-                  SIZE_SYMBOLS + 3);
+  // Use Flexbox for horizontal layout
+  lv_obj_set_layout(widget->obj, LV_LAYOUT_FLEX);
+  lv_obj_set_flex_flow(widget->obj, LV_FLEX_FLOW_ROW);
+  // Add some spacing between icons (adjust as needed)
+  lv_obj_set_style_pad_column(widget->obj, 5, LV_PART_MAIN);
 
-  static lv_style_t style_line;
-  lv_style_init(&style_line);
-  lv_style_set_line_width(&style_line, 2);
+  // Choose font (adjust font and size as needed)
+  const lv_font_t *mod_font = &SF_Compact_Text_Bold_16; // Example font
 
-  static const lv_point_t selection_line_points[] = {{0, 0}, {SIZE_SYMBOLS, 0}};
+  // Create Shift label
+  widget->shift_label = lv_label_create(widget->obj);
+  lv_label_set_text(widget->shift_label,
+                    SF_SYMBOL_SHIFT); // Use SF Symbol for Shift (⇧)
+  lv_obj_set_style_text_font(widget->shift_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->shift_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
 
-  for (int i = 0; i < NUM_SYMBOLS; i++) {
-    modifier_symbols[i]->symbol = lv_img_create(widget->obj);
-    lv_obj_align(modifier_symbols[i]->symbol, LV_ALIGN_TOP_LEFT,
-                 1 + (SIZE_SYMBOLS + 1) * i, 1);
-    lv_img_set_src(modifier_symbols[i]->symbol,
-                   modifier_symbols[i]->symbol_dsc);
+  // Create Control label
+  widget->ctrl_label = lv_label_create(widget->obj);
+  lv_label_set_text(widget->ctrl_label,
+                    SF_SYMBOL_CONTROL); // Use SF Symbol for Control (⌃)
+  lv_obj_set_style_text_font(widget->ctrl_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->ctrl_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
 
-    modifier_symbols[i]->selection_line = lv_line_create(widget->obj);
-    lv_line_set_points(modifier_symbols[i]->selection_line,
-                       selection_line_points, 2);
-    lv_obj_add_style(modifier_symbols[i]->selection_line, &style_line, 0);
-    lv_obj_align_to(modifier_symbols[i]->selection_line,
-                    modifier_symbols[i]->symbol, LV_ALIGN_OUT_BOTTOM_LEFT, 0,
-                    3);
-  }
+  // Create Option label
+  widget->opt_label = lv_label_create(widget->obj);
+  lv_label_set_text(widget->opt_label,
+                    SF_SYMBOL_OPTION); // Use SF Symbol for Option (⌥)
+  lv_obj_set_style_text_font(widget->opt_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->opt_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
 
+  // Create Command label
+  widget->cmd_label = lv_label_create(widget->obj);
+  lv_label_set_text(widget->cmd_label,
+                    SF_SYMBOL_COMMAND); // Use SF Symbol for Command (⌘)
+  lv_obj_set_style_text_font(widget->cmd_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->cmd_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
+
+  /* Add this widget to the list of modifier indicators */
   sys_slist_append(&widgets, &widget->node);
 
-  widget_modifiers_init();
+  /* Initialize the widget's event listener */
+  widget_modifiers_init(); // This initializes the listener created by
+                           // ZMK_DISPLAY_WIDGET_LISTENER
+
+  // Update visuals once initially with current state (optional, depends on
+  // system init order) struct zmk_widget_modifiers *container;
+  // SYS_SLIST_FOR_EACH_CONTAINER(&widgets, container, node) {
+  //    modifiers_update_visuals(container, modifiers_get_state(NULL)); // Might
+  //    need a way to get initial state
+  // }
 
   return 0;
 }
 
+/**
+ * @brief Returns the LVGL container object associated with this widget.
+ *
+ * @param widget Pointer to the widget structure.
+ * @return Pointer to the LVGL container object.
+ */
 lv_obj_t *zmk_widget_modifiers_obj(struct zmk_widget_modifiers *widget) {
   return widget->obj;
 }

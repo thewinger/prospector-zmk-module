@@ -44,9 +44,10 @@ lv_obj_t *zmk_display_status_screen() {
                   lv_pct(100), 140);
   lv_obj_align(zmk_widget_layer_roller_obj(&layer_roller_widget),
                LV_ALIGN_LEFT_MID, 0, 0);
+
   zmk_widget_modifiers_init(&modifiers_widget, screen);
-  lv_obj_align(zmk_widget_modifiers_obj(&modifiers_widget),
-               LV_ALIGN_BOTTOM_LEFT, 0, 0);
+  lv_obj_align(zmk_widget_modifiers_obj(&modifiers_widget), LV_ALIGN_TOP_MID, 0,
+               0);
 
   return screen;
 }
