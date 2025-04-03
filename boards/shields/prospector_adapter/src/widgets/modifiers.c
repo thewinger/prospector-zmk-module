@@ -139,7 +139,7 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   lv_obj_set_style_pad_column(widget->obj, 5, LV_PART_MAIN);
 
   // Choose font (adjust font and size as needed)
-  const lv_font_t *mod_font = &SF_Compact_Text_Bold_32; // Example font
+  const lv_font_t *mod_font = &SF_Compact_Text_Medium_24; // Example font
 
   // Create Shift label
   widget->shift_label = lv_label_create(widget->obj);
