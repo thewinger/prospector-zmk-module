@@ -16,8 +16,8 @@
 // Make sure these includes provide the necessary symbol definitions and fonts
 // If SF_SYMBOL_* or SF_Compact_Text_Bold_32 are defined elsewhere, ensure
 // those headers are included directly or indirectly.
-// #include <fonts.h>
-// #include <sf_symbols.h>
+#include <fonts.h>
+#include <sf_symbols.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
