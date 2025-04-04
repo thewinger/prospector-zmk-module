@@ -1,31 +1,36 @@
 // modifiers.h
 #pragma once
 
-#include <lvgl.h>          // Include LVGL header for lv_obj_t
-#include <zephyr/kernel.h> // Include Zephyr kernel for sys_snode_t
+#include <lvgl.h>
+#include <zephyr/kernel.h>
 
 /**
- * @brief Structure for the Modifier Indicator widget instance.
- *        Holds the LVGL object and the linked list node.
+ * @brief Structure for the Modifiers widget (Symbol version).
+ *        Holds pointers to the individual LVGL labels for each modifier.
  */
-struct zmk_widget_modifier_indicator {
-  sys_snode_t node; // Node structure for use in linked lists (like sys_slist_t)
-  lv_obj_t *obj; // Pointer to the core LVGL object for this widget (the label)
+struct zmk_widget_modifiers {
+  sys_snode_t node;      // Node for the linked list
+  lv_obj_t *obj;         // Main LVGL container object for the widget
+  lv_obj_t *shift_label; // Label for Shift symbol
+  lv_obj_t *ctrl_label;  // Label for Control symbol
+  lv_obj_t *opt_label;   // Label for Option (Alt) symbol
+  lv_obj_t *cmd_label;   // Label for Command (Gui) symbol
 };
 
 /**
- * @brief Initializes a new modifier indicator widget.
+ * @brief Initialize the Modifiers widget (Symbol version).
+ *
  * @param widget Pointer to the widget structure to initialize.
- * @param parent The parent LVGL object to attach this widget to.
+ * @param parent The LVGL parent object for this widget.
  * @return 0 on success, negative error code otherwise.
  */
-int zmk_widget_modifier_indicator_init(
-    struct zmk_widget_modifier_indicator *widget, lv_obj_t *parent);
+int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
+                              lv_obj_t *parent);
 
 /**
- * @brief Returns the underlying LVGL object associated with this widget.
+ * @brief Get the LVGL object associated with the Modifiers widget.
+ *
  * @param widget Pointer to the widget structure.
- * @return Pointer to the LVGL label object.
+ * @return Pointer to the LVGL container object.
  */
-lv_obj_t *
-zmk_widget_modifier_indicator_obj(struct zmk_widget_modifier_indicator *widget);
+lv_obj_t *zmk_widget_modifiers_obj(struct zmk_widget_modifiers *widget);
