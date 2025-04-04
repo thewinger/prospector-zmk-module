@@ -109,7 +109,7 @@ int zmk_widget_modifier_indicator_init(
   lv_label_set_text(widget->obj, "-"); // Initial text
   lv_obj_set_style_text_color(widget->obj, lv_color_hex(0x606060),
                               LV_PART_MAIN); // Initial color
-  lv_obj_set_style_text_font(widget->obj, &lv_font_montserrat_14,
+  lv_obj_set_style_text_font(widget->obj, &SF_Compact_Text_Bold_32,
                              LV_PART_MAIN); // Example font
   lv_obj_set_style_text_align(widget->obj, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
 
