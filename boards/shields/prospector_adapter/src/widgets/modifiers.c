@@ -24,33 +24,43 @@ struct modifier_indicator_state {
   zmk_mod_flags_t modifiers; // Use ZMK's modifier flags type
 };
 
-// Function to update the visual appearance of the widget (NO CHANGES HERE)
+// Function to update the visual appearance of the widget
 static void
 modifier_indicator_update_label(lv_obj_t *label,
                                 struct modifier_indicator_state state) {
-  char text[6] = {0};
+  char text[6] = {0}; // Increased size slightly just in case, though 5 should
+                      // be enough (CSAG + null)
   int index = 0;
 
-  if (state.modifiers & MOD_CONTROL) {
+  // Check if EITHER Left OR Right Control is pressed
+  if (state.modifiers & (MOD_LCTL | MOD_RCTL)) { // Corrected check
     text[index++] = 'C';
   }
-  if (state.modifiers & MOD_SHIFT) {
+  // Check if EITHER Left OR Right Shift is pressed
+  if (state.modifiers & (MOD_LSFT | MOD_RSFT)) { // Corrected check
     text[index++] = 'S';
   }
-  if (state.modifiers & MOD_ALT) {
+  // Check if EITHER Left OR Right Alt is pressed
+  if (state.modifiers & (MOD_LALT | MOD_RALT)) { // Corrected check
     text[index++] = 'A';
   }
-  if (state.modifiers & MOD_GUI) {
+  // Check if EITHER Left OR Right GUI is pressed
+  if (state.modifiers & (MOD_LGUI | MOD_RGUI)) { // Corrected check
     text[index++] = 'G';
   }
 
+  // If no modifiers are active, display a placeholder
   if (index == 0) {
     text[index++] = '-';
   }
+  // Ensure null termination
   text[index] = '\0';
 
+  // Set the label text
   lv_label_set_text(label, text);
 
+  // Set the color based on whether any modifier is active
+  // Check if the modifier state is non-zero
   if (state.modifiers != 0) {
     lv_obj_set_style_text_color(label, lv_color_hex(0xFFFFFF),
                                 LV_PART_MAIN); // Active: White
