@@ -10,8 +10,8 @@
 // #include <zmk/endpoints.h> // No longer needed for the primary path
 
 // Include fonts if you plan to use specific fonts or symbols
-// #include <fonts.h>
-// #include <sf_symbols.h>
+#include <fonts.h>
+#include <sf_symbols.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
