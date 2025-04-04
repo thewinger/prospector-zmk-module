@@ -140,7 +140,7 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   // --- Use the Font and Symbols you specified ---
   // Ensure this font includes the SF Symbols you need, or include a separate
   // symbol font
-  const lv_font_t *mod_font = &SF_Compact_Text_Bold_32;
+  const lv_font_t *mod_font = &SF_Compact_Text_Semibold_32;
 
   // Create Shift label
   widget->shift_label = lv_label_create(widget->obj);
