@@ -9,9 +9,8 @@
 #include <zmk/display.h>
 #include <zmk/event_manager.h>
 #include <zmk/events/keycode_state_changed.h> // Used to trigger updates
-#include <zmk/hid.h>   // Required for zmk_hid_get_explicit_mods()
-#include <zmk/keys.h>  // Required for modifier definitions (MOD_LSFT, etc.)
-#include <zmk/types.h> // Required for zmk_mod_flags_t
+#include <zmk/hid.h>  // Required for zmk_hid_get_explicit_mods()
+#include <zmk/keys.h> // Required for modifier definitions (MOD_LSFT, etc.)
 
 // Make sure these includes provide the necessary symbol definitions and fonts
 // If SF_SYMBOL_* or SF_Compact_Text_Bold_32 are defined elsewhere, ensure
