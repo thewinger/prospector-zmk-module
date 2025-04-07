@@ -114,9 +114,22 @@ modifiers_get_state_from_event(const zmk_event_t *eh) {
   return (struct modifiers_state){.current_mods = current_mods};
 }
 
-/* Register the widget listener for modifier changes */
-ZMK_DISPLAY_WIDGET_LISTENER(widget_modifiers_sub, struct modifiers_state,
-                            modifiers_update_cb, modifiers_get_state_from_event)
+// Listener function for modifier state changes
+static int widget_modifiers_listener(const zmk_event_t *eh) {
+    // Ensure the event is the correct type before processing
+    if (!as_zmk_modifiers_state_changed(eh)) {
+        return ZMK_EV_EVENT_BUBBLE;
+    }
+    // Get the state from the event
+    struct modifiers_state state = modifiers_get_state_from_event(eh);
+    // Update the widgets
+    modifiers_update_cb(state);
+    // Allow other listeners to process the event
+    return ZMK_EV_EVENT_BUBBLE;
+}
+
+/* Register the widget listener for modifier changes using standard ZMK macros */
+ZMK_LISTENER(widget_modifiers_sub, widget_modifiers_listener)
 /* Subscribe the listener to modifier state changes */
 ZMK_SUBSCRIPTION(widget_modifiers_sub, zmk_modifiers_state_changed);
 
@@ -140,10 +153,12 @@ static int display_status_listener(const zmk_event_t *eh) {
   return ZMK_EV_EVENT_BUBBLE; // Allow other listeners to process
 }
 
-// Register the display status listener
-ZMK_LISTENER(widget_modifiers_display_status, display_status_listener)
-// Subscribe to display status changes
-ZMK_SUBSCRIPTION(widget_modifiers_display_status, zmk_display_status_changed);
+// TODO: Find the correct event for display resume/refresh in the current ZMK version
+//       The zmk_display_status_changed event seems to be removed or renamed.
+// // Register the display status listener
+// ZMK_LISTENER(widget_modifiers_display_status, display_status_listener)
+// // Subscribe to display status changes
+// ZMK_SUBSCRIPTION(widget_modifiers_display_status, zmk_display_status_changed);
 
 /**
  * @brief Initializes a new modifier indicator widget (Symbol version).
