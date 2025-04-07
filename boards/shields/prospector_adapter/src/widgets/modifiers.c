@@ -6,17 +6,13 @@
 
 #include "modifiers.h" // Include the corresponding header
 
-#include <zmk/display.h> // Includes display status events now?
+#include <zephyr/sys/slist.h> // Explicit include for SYS_SLIST_* macros
+#include <zmk/display.h>      // Includes display status events now?
 #include <zmk/event_manager.h>
-// #include <zmk/events/display_status_changed.h>  // Original path - Not found in build
 #include <zmk/events/modifiers_state_changed.h> // More efficient trigger
 #include <zmk/hid.h>  // Required for zmk_hid_get_explicit_mods()
 #include <zmk/keys.h> // Required for modifier definitions (MOD_LSFT, etc.)
-#include <zephyr/sys/slist.h> // Explicit include for SYS_SLIST_* macros
 
-// Make sure these includes provide the necessary symbol definitions and fonts
-// If SF_SYMBOL_* or SF_Compact_Text_Bold_32 are defined elsewhere, ensure
-// those headers are included directly or indirectly.
 #include <fonts.h>
 #include <sf_symbols.h>
 
@@ -117,29 +113,23 @@ modifiers_get_state_from_event(const zmk_event_t *eh) {
 
 // Listener function for modifier state changes
 static int widget_modifiers_listener(const zmk_event_t *eh) {
-    // Ensure the event is the correct type before processing
-    if (!as_zmk_modifiers_state_changed(eh)) {
-        return ZMK_EV_EVENT_BUBBLE;
-    }
-    // Get the state from the event
-    struct modifiers_state state = modifiers_get_state_from_event(eh);
-    // Update the widgets
-    modifiers_update_cb(state);
-    // Allow other listeners to process the event
+  // Ensure the event is the correct type before processing
+  if (!as_zmk_modifiers_state_changed(eh)) {
     return ZMK_EV_EVENT_BUBBLE;
+  }
+  // Get the state from the event
+  struct modifiers_state state = modifiers_get_state_from_event(eh);
+  // Update the widgets
+  modifiers_update_cb(state);
+  // Allow other listeners to process the event
+  return ZMK_EV_EVENT_BUBBLE;
 }
 
-/* Register the widget listener for modifier changes using standard ZMK macros */
+/* Register the widget listener for modifier changes using standard ZMK macros
+ */
 ZMK_LISTENER(widget_modifiers_sub, widget_modifiers_listener)
 /* Subscribe the listener to modifier state changes */
 ZMK_SUBSCRIPTION(widget_modifiers_sub, zmk_modifiers_state_changed);
-
-// NOTE: Display resume/refresh handling removed as the corresponding
-//       event (zmk_display_status_changed) is not available in this ZMK version.
-// // Register the display status listener
-// ZMK_LISTENER(widget_modifiers_display_status, display_status_listener)
-// // Subscribe to display status changes
-// ZMK_SUBSCRIPTION(widget_modifiers_display_status, zmk_display_status_changed);
 
 /**
  * @brief Initializes a new modifier indicator widget (Symbol version).
@@ -207,7 +197,8 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   /* Initialize the main widget listener (for modifier changes) */
   // The ZMK_DISPLAY_WIDGET_LISTENER macro handles its own initialization.
   // No explicit init call needed here for widget_modifiers_sub.
-  // The initial state will be set when the first zmk_modifiers_state_changed event occurs.
+  // The initial state will be set when the first zmk_modifiers_state_changed
+  // event occurs.
 
   return 0;
 }
