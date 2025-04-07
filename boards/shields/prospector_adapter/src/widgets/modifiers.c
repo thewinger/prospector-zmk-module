@@ -43,7 +43,8 @@ struct modifiers_state {
 static void modifiers_update_visuals(struct zmk_widget_modifiers *widget,
                                      struct modifiers_state state) {
   zmk_mod_flags_t mods = state.current_mods;
-  // LOG_DBG("Updating modifier visuals with state: 0x%02X", mods); // Removed log
+  // LOG_DBG("Updating modifier visuals with state: 0x%02X", mods); // Removed
+  // log
 
   // Update the state label text for debugging
   char state_str[12]; // "Mods: 0xXX" + null terminator
@@ -168,18 +169,18 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   // Ensure SF_SYMBOL_SHIFT is defined (e.g., in sf_symbols.h or similar)
   // It should be a string like "\xEF\x87\xA7" for U+F1E7 or similar UTF-8
   // sequence
-  lv_label_set_text(widget->shift_label, SF_SYMBOL_SHIFT);
-  lv_obj_set_style_text_font(widget->shift_label, mod_font, LV_PART_MAIN);
-  lv_obj_set_style_text_color(widget->shift_label, MODIFIER_INACTIVE_COLOR,
-                              LV_PART_MAIN);
+  // lv_label_set_text(widget->shift_label, SF_SYMBOL_SHIFT);
+  // lv_obj_set_style_text_font(widget->shift_label, mod_font, LV_PART_MAIN);
+  // lv_obj_set_style_text_color(widget->shift_label, MODIFIER_INACTIVE_COLOR,
+  //                             LV_PART_MAIN);
 
   // Create Control label
-  widget->ctrl_label = lv_label_create(widget->obj);
-  // Ensure SF_SYMBOL_CONTROL is defined
-  lv_label_set_text(widget->ctrl_label, SF_SYMBOL_CONTROL);
-  lv_obj_set_style_text_font(widget->ctrl_label, mod_font, LV_PART_MAIN);
-  lv_obj_set_style_text_color(widget->ctrl_label, MODIFIER_INACTIVE_COLOR,
-                              LV_PART_MAIN);
+  // widget->ctrl_label = lv_label_create(widget->obj);
+  // // Ensure SF_SYMBOL_CONTROL is defined
+  // lv_label_set_text(widget->ctrl_label, SF_SYMBOL_CONTROL);
+  // lv_obj_set_style_text_font(widget->ctrl_label, mod_font, LV_PART_MAIN);
+  // lv_obj_set_style_text_color(widget->ctrl_label, MODIFIER_INACTIVE_COLOR,
+  //                             LV_PART_MAIN);
 
   // Create Option label
   widget->opt_label = lv_label_create(widget->obj);
@@ -201,9 +202,12 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   widget->state_label = lv_label_create(widget->obj);
   lv_label_set_text(widget->state_label, "Mods: 0x00"); // Initial text
   // Use a smaller, standard font if available, or the same mod_font
-  // lv_obj_set_style_text_font(widget->state_label, &lv_font_montserrat_14, LV_PART_MAIN); // Example
-  lv_obj_set_style_text_font(widget->state_label, mod_font, LV_PART_MAIN); // Or use the same font
-  lv_obj_set_style_text_color(widget->state_label, MODIFIER_INACTIVE_COLOR, LV_PART_MAIN);
+  // lv_obj_set_style_text_font(widget->state_label, &lv_font_montserrat_14,
+  // LV_PART_MAIN); // Example
+  lv_obj_set_style_text_font(widget->state_label, mod_font,
+                             LV_PART_MAIN); // Or use the same font
+  lv_obj_set_style_text_color(widget->state_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
 
   /* Add this widget to the list of modifier indicators */
   sys_slist_append(&widgets, &widget->node);
