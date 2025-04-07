@@ -6,9 +6,9 @@
 
 #include "modifiers.h" // Include the corresponding header
 
-#include <zmk/display.h>
+#include <zmk/display.h> // Includes display status events now?
 #include <zmk/event_manager.h>
-#include <zmk/events/display_status_changed.h>  // For refresh on resume
+// #include <zmk/events/display_status_changed.h>  // Original path - Not found in build
 #include <zmk/events/modifiers_state_changed.h> // More efficient trigger
 #include <zmk/hid.h>  // Required for zmk_hid_get_explicit_mods()
 #include <zmk/keys.h> // Required for modifier definitions (MOD_LSFT, etc.)
