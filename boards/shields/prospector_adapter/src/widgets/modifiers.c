@@ -120,13 +120,27 @@ modifiers_get_state_from_event(const zmk_event_t *eh) {
 
 // Listener function for modifier state changes
 static int widget_modifiers_listener(const zmk_event_t *eh) {
-  LOG_DBG("widget_modifiers_listener triggered"); // Add log here
+  static uint32_t call_count = 0; // Counter for listener calls
+  call_count++;
+
+  // --- Debug: Update label immediately to show listener was called ---
+  struct zmk_widget_modifiers *first_widget =
+      SYS_SLIST_PEEK_HEAD_CONTAINER(&widgets, first_widget, node);
+  if (first_widget) {
+    char count_str[16]; // "Cnt: XXXXXXXX"
+    snprintf(count_str, sizeof(count_str), "Cnt: %u", call_count);
+    // Temporarily use the state_label to show the call count
+    lv_label_set_text(first_widget->state_label, count_str);
+  }
+  // --- End Debug ---
+
   // Ensure the event is the correct type before processing
   if (!as_zmk_modifiers_state_changed(eh)) {
-    LOG_WRN("Listener triggered by wrong event type!"); // Add warning if type mismatch
+    // If type is wrong, we've already updated the label above, so just return.
     return ZMK_EV_EVENT_BUBBLE;
   }
-  // Get the state from the event
+
+  // Get the state from the event (This part will now run only if type is correct)
   struct modifiers_state state = modifiers_get_state_from_event(eh);
   // Update the widgets
   modifiers_update_cb(state);
