@@ -134,28 +134,8 @@ ZMK_LISTENER(widget_modifiers_sub, widget_modifiers_listener)
 /* Subscribe the listener to modifier state changes */
 ZMK_SUBSCRIPTION(widget_modifiers_sub, zmk_modifiers_state_changed);
 
-// Function to fetch the current state directly (used for refresh)
-static struct modifiers_state modifiers_get_current_state() {
-  zmk_mod_flags_t current_mods = zmk_hid_get_explicit_mods();
-  LOG_DBG("DISP | Fetched current explicit mods for refresh: 0x%02X",
-          current_mods);
-  return (struct modifiers_state){.current_mods = current_mods};
-}
-
-// Listener function for display status changes
-static int display_status_listener(const zmk_event_t *eh) {
-  const struct zmk_display_status_changed *ev =
-      as_zmk_display_status_changed(eh);
-  if (ev && ev->status == ZMK_DISPLAY_EVENT_RESUMED) {
-    LOG_DBG("DISP | Display resumed, refreshing modifiers widget");
-    // Fetch the current state and update the visuals
-    modifiers_update_cb(modifiers_get_current_state());
-  }
-  return ZMK_EV_EVENT_BUBBLE; // Allow other listeners to process
-}
-
-// TODO: Find the correct event for display resume/refresh in the current ZMK version
-//       The zmk_display_status_changed event seems to be removed or renamed.
+// NOTE: Display resume/refresh handling removed as the corresponding
+//       event (zmk_display_status_changed) is not available in this ZMK version.
 // // Register the display status listener
 // ZMK_LISTENER(widget_modifiers_display_status, display_status_listener)
 // // Subscribe to display status changes
@@ -227,10 +207,7 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   /* Initialize the main widget listener (for modifier changes) */
   // The ZMK_DISPLAY_WIDGET_LISTENER macro handles its own initialization.
   // No explicit init call needed here for widget_modifiers_sub.
-
-  // Trigger an initial update to set the correct colors based on startup
-  // modifier state by fetching the current state directly.
-  modifiers_update_cb(modifiers_get_current_state());
+  // The initial state will be set when the first zmk_modifiers_state_changed event occurs.
 
   return 0;
 }
