@@ -165,7 +165,7 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   const lv_font_t *mod_font = &SF_Compact_Text_Semibold_32;
 
   // Create Shift label
-  widget->shift_label = lv_label_create(widget->obj);
+  // widget->shift_label = lv_label_create(widget->obj);
   // Ensure SF_SYMBOL_SHIFT is defined (e.g., in sf_symbols.h or similar)
   // It should be a string like "\xEF\x87\xA7" for U+F1E7 or similar UTF-8
   // sequence
@@ -183,20 +183,20 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   //                             LV_PART_MAIN);
 
   // Create Option label
-  widget->opt_label = lv_label_create(widget->obj);
-  // Ensure SF_SYMBOL_OPTION is defined
-  lv_label_set_text(widget->opt_label, SF_SYMBOL_OPTION);
-  lv_obj_set_style_text_font(widget->opt_label, mod_font, LV_PART_MAIN);
-  lv_obj_set_style_text_color(widget->opt_label, MODIFIER_INACTIVE_COLOR,
-                              LV_PART_MAIN);
+  // widget->opt_label = lv_label_create(widget->obj);
+  // // Ensure SF_SYMBOL_OPTION is defined
+  // lv_label_set_text(widget->opt_label, SF_SYMBOL_OPTION);
+  // lv_obj_set_style_text_font(widget->opt_label, mod_font, LV_PART_MAIN);
+  // lv_obj_set_style_text_color(widget->opt_label, MODIFIER_INACTIVE_COLOR,
+  //                             LV_PART_MAIN);
 
   // Create Command label
-  widget->cmd_label = lv_label_create(widget->obj);
-  // Ensure SF_SYMBOL_COMMAND is defined
-  lv_label_set_text(widget->cmd_label, SF_SYMBOL_COMMAND);
-  lv_obj_set_style_text_font(widget->cmd_label, mod_font, LV_PART_MAIN);
-  lv_obj_set_style_text_color(widget->cmd_label, MODIFIER_INACTIVE_COLOR,
-                              LV_PART_MAIN);
+  // widget->cmd_label = lv_label_create(widget->obj);
+  // // Ensure SF_SYMBOL_COMMAND is defined
+  // lv_label_set_text(widget->cmd_label, SF_SYMBOL_COMMAND);
+  // lv_obj_set_style_text_font(widget->cmd_label, mod_font, LV_PART_MAIN);
+  // lv_obj_set_style_text_color(widget->cmd_label, MODIFIER_INACTIVE_COLOR,
+  //                             LV_PART_MAIN);
 
   // Create State label (for debugging)
   widget->state_label = lv_label_create(widget->obj);
