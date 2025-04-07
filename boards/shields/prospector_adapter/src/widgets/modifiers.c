@@ -43,6 +43,7 @@ struct modifiers_state {
 static void modifiers_update_visuals(struct zmk_widget_modifiers *widget,
                                      struct modifiers_state state) {
   zmk_mod_flags_t mods = state.current_mods;
+  LOG_DBG("Updating modifier visuals with state: 0x%02X", mods); // Added log
 
   // Update Shift symbol color
   if (mods & (MOD_LSFT | MOD_RSFT)) {
