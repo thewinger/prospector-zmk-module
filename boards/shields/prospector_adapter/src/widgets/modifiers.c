@@ -6,13 +6,15 @@
 
 #include "modifiers.h" // Include the corresponding header
 
-#include <zephyr/sys/slist.h> // Explicit include for SYS_SLIST_* macros
-#include <zmk/display.h>      // Includes display status events now?
+#include <zmk/display.h>
 #include <zmk/event_manager.h>
-#include <zmk/events/modifiers_state_changed.h> // More efficient trigger
+#include <zmk/events/keycode_state_changed.h> // Used to trigger updates
 #include <zmk/hid.h>  // Required for zmk_hid_get_explicit_mods()
 #include <zmk/keys.h> // Required for modifier definitions (MOD_LSFT, etc.)
 
+// Make sure these includes provide the necessary symbol definitions and fonts
+// If SF_SYMBOL_* or SF_Compact_Text_Bold_32 are defined elsewhere, ensure
+// those headers are included directly or indirectly.
 #include <fonts.h>
 #include <sf_symbols.h>
 
@@ -43,13 +45,6 @@ struct modifiers_state {
 static void modifiers_update_visuals(struct zmk_widget_modifiers *widget,
                                      struct modifiers_state state) {
   zmk_mod_flags_t mods = state.current_mods;
-  // LOG_DBG("Updating modifier visuals with state: 0x%02X", mods); // Removed
-  // log
-
-  // Update the state label text for debugging
-  char state_str[12]; // "Mods: 0xXX" + null terminator
-  snprintf(state_str, sizeof(state_str), "Mods: 0x%02X", mods);
-  lv_label_set_text(widget->state_label, state_str);
 
   // Update Shift symbol color
   if (mods & (MOD_LSFT | MOD_RSFT)) {
@@ -105,54 +100,21 @@ static void modifiers_update_cb(struct modifiers_state state) {
  * @brief Fetches the current modifier state directly from the HID system.
  *        Triggered by keycode_state_changed event.
  *
- * @param eh The event pointer, expected to be zmk_modifiers_state_changed.
- * @return The modifier state extracted from the event.
+ * @param eh The event pointer (not used to extract data here).
+ * @return The current state of the explicit modifiers.
  */
-static struct modifiers_state
-modifiers_get_state_from_event(const zmk_event_t *eh) {
-  const struct zmk_modifiers_state_changed *ev =
-      as_zmk_modifiers_state_changed(eh);
-  // Use the modifier state directly from the event
-  zmk_mod_flags_t current_mods = ev->modifiers;
-  LOG_DBG("DISP | Modifiers state changed: 0x%02X", current_mods);
+static struct modifiers_state modifiers_get_state(const zmk_event_t *eh) {
+  // Ignore the specific event data, just fetch the current global state
+  zmk_mod_flags_t current_mods = zmk_hid_get_explicit_mods();
+  LOG_DBG("DISP | Fetched explicit mods for symbols: 0x%02X", current_mods);
   return (struct modifiers_state){.current_mods = current_mods};
 }
 
-// Listener function for modifier state changes
-static int widget_modifiers_listener(const zmk_event_t *eh) {
-  static uint32_t call_count = 0; // Counter for listener calls
-  call_count++;
-
-  // --- Debug: Update label immediately to show listener was called ---
-  struct zmk_widget_modifiers *first_widget =
-      SYS_SLIST_PEEK_HEAD_CONTAINER(&widgets, first_widget, node);
-  if (first_widget) {
-    char count_str[16]; // "Cnt: XXXXXXXX"
-    snprintf(count_str, sizeof(count_str), "Cnt: %u", call_count);
-    // Temporarily use the state_label to show the call count
-    lv_label_set_text(first_widget->state_label, count_str);
-  }
-  // --- End Debug ---
-
-  // Ensure the event is the correct type before processing
-  if (!as_zmk_modifiers_state_changed(eh)) {
-    // If type is wrong, we've already updated the label above, so just return.
-    return ZMK_EV_EVENT_BUBBLE;
-  }
-
-  // Get the state from the event (This part will now run only if type is correct)
-  struct modifiers_state state = modifiers_get_state_from_event(eh);
-  // Update the widgets
-  modifiers_update_cb(state);
-  // Allow other listeners to process the event
-  return ZMK_EV_EVENT_BUBBLE;
-}
-
-/* Register the widget listener for modifier changes using standard ZMK macros
- */
-ZMK_LISTENER(widget_modifiers_sub, widget_modifiers_listener)
-/* Subscribe the listener to modifier state changes */
-ZMK_SUBSCRIPTION(widget_modifiers_sub, zmk_modifiers_state_changed);
+/* Register the widget listener */
+ZMK_DISPLAY_WIDGET_LISTENER(widget_modifiers, struct modifiers_state,
+                            modifiers_update_cb, modifiers_get_state)
+/* Subscribe the listener to keycode state changes */
+ZMK_SUBSCRIPTION(widget_modifiers, zmk_keycode_state_changed);
 
 /**
  * @brief Initializes a new modifier indicator widget (Symbol version).
@@ -181,58 +143,49 @@ int zmk_widget_modifiers_init(struct zmk_widget_modifiers *widget,
   const lv_font_t *mod_font = &SF_Compact_Text_Bold_32;
 
   // Create Shift label
-  // widget->shift_label = lv_label_create(widget->obj);
+  widget->shift_label = lv_label_create(widget->obj);
   // Ensure SF_SYMBOL_SHIFT is defined (e.g., in sf_symbols.h or similar)
   // It should be a string like "\xEF\x87\xA7" for U+F1E7 or similar UTF-8
   // sequence
-  // lv_label_set_text(widget->shift_label, SF_SYMBOL_SHIFT);
-  // lv_obj_set_style_text_font(widget->shift_label, mod_font, LV_PART_MAIN);
-  // lv_obj_set_style_text_color(widget->shift_label, MODIFIER_INACTIVE_COLOR,
-  //                             LV_PART_MAIN);
+  lv_label_set_text(widget->shift_label, SF_SYMBOL_SHIFT);
+  lv_obj_set_style_text_font(widget->shift_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->shift_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
 
   // Create Control label
-  // widget->ctrl_label = lv_label_create(widget->obj);
-  // // Ensure SF_SYMBOL_CONTROL is defined
-  // lv_label_set_text(widget->ctrl_label, SF_SYMBOL_CONTROL);
-  // lv_obj_set_style_text_font(widget->ctrl_label, mod_font, LV_PART_MAIN);
-  // lv_obj_set_style_text_color(widget->ctrl_label, MODIFIER_INACTIVE_COLOR,
-  //                             LV_PART_MAIN);
+  widget->ctrl_label = lv_label_create(widget->obj);
+  // Ensure SF_SYMBOL_CONTROL is defined
+  lv_label_set_text(widget->ctrl_label, SF_SYMBOL_CONTROL);
+  lv_obj_set_style_text_font(widget->ctrl_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->ctrl_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
 
   // Create Option label
-  // widget->opt_label = lv_label_create(widget->obj);
-  // // Ensure SF_SYMBOL_OPTION is defined
-  // lv_label_set_text(widget->opt_label, SF_SYMBOL_OPTION);
-  // lv_obj_set_style_text_font(widget->opt_label, mod_font, LV_PART_MAIN);
-  // lv_obj_set_style_text_color(widget->opt_label, MODIFIER_INACTIVE_COLOR,
-  //                             LV_PART_MAIN);
+  widget->opt_label = lv_label_create(widget->obj);
+  // Ensure SF_SYMBOL_OPTION is defined
+  lv_label_set_text(widget->opt_label, SF_SYMBOL_OPTION);
+  lv_obj_set_style_text_font(widget->opt_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->opt_label, MODIFIER_INACTIVE_COLOR,
+                              LV_PART_MAIN);
 
   // Create Command label
-  // widget->cmd_label = lv_label_create(widget->obj);
-  // // Ensure SF_SYMBOL_COMMAND is defined
-  // lv_label_set_text(widget->cmd_label, SF_SYMBOL_COMMAND);
-  // lv_obj_set_style_text_font(widget->cmd_label, mod_font, LV_PART_MAIN);
-  // lv_obj_set_style_text_color(widget->cmd_label, MODIFIER_INACTIVE_COLOR,
-  //                             LV_PART_MAIN);
-
-  // Create State label (for debugging)
-  widget->state_label = lv_label_create(widget->obj);
-  lv_label_set_text(widget->state_label, "Mods: 0x00"); // Initial text
-  // Use a smaller, standard font if available, or the same mod_font
-  // lv_obj_set_style_text_font(widget->state_label, &lv_font_montserrat_14,
-  // LV_PART_MAIN); // Example
-  lv_obj_set_style_text_font(widget->state_label, mod_font,
-                             LV_PART_MAIN); // Or use the same font
-  lv_obj_set_style_text_color(widget->state_label, MODIFIER_INACTIVE_COLOR,
+  widget->cmd_label = lv_label_create(widget->obj);
+  // Ensure SF_SYMBOL_COMMAND is defined
+  lv_label_set_text(widget->cmd_label, SF_SYMBOL_COMMAND);
+  lv_obj_set_style_text_font(widget->cmd_label, mod_font, LV_PART_MAIN);
+  lv_obj_set_style_text_color(widget->cmd_label, MODIFIER_INACTIVE_COLOR,
                               LV_PART_MAIN);
 
   /* Add this widget to the list of modifier indicators */
   sys_slist_append(&widgets, &widget->node);
 
-  /* Initialize the main widget listener (for modifier changes) */
-  // The ZMK_DISPLAY_WIDGET_LISTENER macro handles its own initialization.
-  // No explicit init call needed here for widget_modifiers_sub.
-  // The initial state will be set when the first zmk_modifiers_state_changed
-  // event occurs.
+  /* Initialize the widget's event listener */
+  widget_modifiers_init(); // This initializes the listener created by
+                           // ZMK_DISPLAY_WIDGET_LISTENER
+
+  // Trigger an initial update to set the correct colors based on startup
+  // modifier state
+  modifiers_update_cb(modifiers_get_state(NULL));
 
   return 0;
 }
