@@ -12,6 +12,7 @@
 #include <zmk/events/modifiers_state_changed.h> // More efficient trigger
 #include <zmk/hid.h>  // Required for zmk_hid_get_explicit_mods()
 #include <zmk/keys.h> // Required for modifier definitions (MOD_LSFT, etc.)
+#include <zephyr/sys/slist.h> // Explicit include for SYS_SLIST_* macros
 
 // Make sure these includes provide the necessary symbol definitions and fonts
 // If SF_SYMBOL_* or SF_Compact_Text_Bold_32 are defined elsewhere, ensure
