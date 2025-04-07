@@ -120,8 +120,10 @@ modifiers_get_state_from_event(const zmk_event_t *eh) {
 
 // Listener function for modifier state changes
 static int widget_modifiers_listener(const zmk_event_t *eh) {
+  LOG_DBG("widget_modifiers_listener triggered"); // Add log here
   // Ensure the event is the correct type before processing
   if (!as_zmk_modifiers_state_changed(eh)) {
+    LOG_WRN("Listener triggered by wrong event type!"); // Add warning if type mismatch
     return ZMK_EV_EVENT_BUBBLE;
   }
   // Get the state from the event
