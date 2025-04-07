@@ -15,6 +15,7 @@ struct zmk_widget_modifiers {
   lv_obj_t *ctrl_label;  // Label for Control symbol
   lv_obj_t *opt_label;   // Label for Option (Alt) symbol
   lv_obj_t *cmd_label;   // Label for Command (Gui) symbol
+  lv_obj_t *state_label; // Label to display raw modifier state (for debugging)
 };
 
 /**
